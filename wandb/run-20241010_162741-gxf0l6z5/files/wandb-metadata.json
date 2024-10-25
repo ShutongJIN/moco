@@ -1,0 +1,43 @@
+{
+    "os": "Linux-4.18.0-553.16.1.el8_10.x86_64-x86_64-with-glibc2.28",
+    "python": "3.9.19",
+    "heartbeatAt": "2024-10-10T14:27:42.065276",
+    "startedAt": "2024-10-10T14:27:41.316814",
+    "docker": null,
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_count": 1,
+    "cpu_count": 256,
+    "cuda": null,
+    "args": [
+        "-a",
+        "resnet50",
+        "--lr",
+        "0.03",
+        "--dist-url",
+        "tcp://localhost:10001",
+        "--multiprocessing-distributed",
+        "--world-size",
+        "1",
+        "--rank",
+        "0",
+        "--checkpoint_dir",
+        "/proj/cloudrobotics-nest/users/Stacking/dataset/CloudGripper_push_1k/mocov2/resnet50/003_1M",
+        "--max_images",
+        "10",
+        "--wandb_name",
+        "v2_resnet50_003_1M",
+        "/proj/cloudrobotics-nest/users/Stacking/dataset/CloudGripper_push_1k/hdf5"
+    ],
+    "state": "running",
+    "program": "/home/x_shuji/moco/main_moco.py",
+    "codePath": "main_moco.py",
+    "git": {
+        "remote": "https://github.com/ShutongJIN/moco.git",
+        "commit": "3b42c2a12afd20da783501e87c3ea837c054397c"
+    },
+    "email": "shutong_jin@163.com",
+    "root": "/home/x_shuji/moco",
+    "host": "node041",
+    "username": "x_shuji",
+    "executable": "/home/x_shuji/.conda/envs/data4robotics/bin/python"
+}

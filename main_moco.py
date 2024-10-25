@@ -29,6 +29,8 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 import torchvision.transforms as transforms
+from moco.hdf5_loader import HDF5Dataset
+import wandb
 
 
 model_names = sorted(
@@ -68,7 +70,7 @@ parser.add_argument(
 parser.add_argument(
     "-b",
     "--batch-size",
-    default=256,
+    default=2048,
     type=int,
     metavar="N",
     help="mini-batch size (default: 256), this is the total "
@@ -175,6 +177,12 @@ parser.add_argument(
     "--aug-plus", action="store_true", help="use moco v2 data augmentation"
 )
 parser.add_argument("--cos", action="store_true", help="use cosine lr schedule")
+
+parser.add_argument('--checkpoint_dir', default=None, type=str, help='path for saving checkpoint')
+
+parser.add_argument('--max_images', default=None, type=int, help='maximum number of images to load')
+
+parser.add_argument('--wandb_name', default='moco_pretraining', type=str, help='name of the wandb run')
 
 
 def main():
@@ -294,6 +302,19 @@ def main_worker(gpu, ngpus_per_node, args):
         momentum=args.momentum,
         weight_decay=args.weight_decay,
     )
+    
+    if not args.distributed or dist.get_rank() == 0:
+        wandb.init(
+        project="moco_pretraining",
+        config={
+            "learning_rate": args.lr,
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+        },
+        resume="allow",  # Allows resuming from a checkpoint
+        name=args.wandb_name,
+    )    
+
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -348,9 +369,14 @@ def main_worker(gpu, ngpus_per_node, args):
             normalize,
         ]
 
-    train_dataset = datasets.ImageFolder(
-        traindir, moco.loader.TwoCropsTransform(transforms.Compose(augmentation))
-    )
+    # train_dataset = datasets.ImageFolder(
+    #     traindir, moco.loader.TwoCropsTransform(transforms.Compose(augmentation))
+    # )
+    
+    train_dataset = HDF5Dataset(args.data, transform=moco.loader.TwoCropsTransform(transforms.Compose(augmentation)), max_images=args.max_images)
+
+    # train_dataset = HDF5Dataset(args.data, transform=moco.loader.TwoCropsTransform(transforms.Compose(augmentation1), transforms.Compose(augmentation2)), max_images=args.max_images)
+
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -378,16 +404,29 @@ def main_worker(gpu, ngpus_per_node, args):
         if not args.multiprocessing_distributed or (
             args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
         ):
-            save_checkpoint(
-                {
-                    "epoch": epoch + 1,
-                    "arch": args.arch,
-                    "state_dict": model.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                },
-                is_best=False,
-                filename="checkpoint_{:04d}.pth.tar".format(epoch),
-            )
+            # save_checkpoint(
+            #     {
+            #         "epoch": epoch + 1,
+            #         "arch": args.arch,
+            #         "state_dict": model.state_dict(),
+            #         "optimizer": optimizer.state_dict(),
+            #     },
+            #     is_best=False,
+            #     filename="checkpoint_{:04d}.pth.tar".format(epoch),
+            # )
+            checkpoint_dir = args.checkpoint_dir
+            if not os.path.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir)
+
+            checkpoint_path = os.path.join(checkpoint_dir, 'checkpoint_%04d.pth.tar' % epoch)
+
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'arch': args.arch,
+                'state_dict': model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+                'wandb_id': wandb.run.id, 
+            }, is_best=False, filename=checkpoint_path)
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
@@ -406,24 +445,62 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
     model.train()
 
     end = time.time()
-    for i, (images, _) in enumerate(train_loader):
+    # for i, (images, _) in enumerate(train_loader):
+    #     # measure data loading time
+    #     data_time.update(time.time() - end)
+
+    #     if args.gpu is not None:
+    #         images[0] = images[0].cuda(args.gpu, non_blocking=True)
+    #         images[1] = images[1].cuda(args.gpu, non_blocking=True)
+
+    #     # compute output
+    #     output, target = model(im_q=images[0], im_k=images[1])
+    #     loss = criterion(output, target)
+
+    #     # acc1/acc5 are (K+1)-way contrast classifier accuracy
+    #     # measure accuracy and record loss
+    #     acc1, acc5 = accuracy(output, target, topk=(1, 5))
+    #     losses.update(loss.item(), images[0].size(0))
+    #     top1.update(acc1[0], images[0].size(0))
+    #     top5.update(acc5[0], images[0].size(0))
+
+    #     # compute gradient and do SGD step
+    #     optimizer.zero_grad()
+    #     loss.backward()
+    #     optimizer.step()
+
+    #     # measure elapsed time
+    #     batch_time.update(time.time() - end)
+    #     end = time.time()
+
+    #     if i % args.print_freq == 0:
+    #         progress.display(i)
+    for i, (images) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
-
+        # Separate the two crops
+        images1, images2 = images[:, 0, :, :, :], images[:, 1, :, :, :]  # Now images1 and images2 have shape [256, 3, 224, 224]
         if args.gpu is not None:
-            images[0] = images[0].cuda(args.gpu, non_blocking=True)
-            images[1] = images[1].cuda(args.gpu, non_blocking=True)
+            images1 = images1.cuda(args.gpu, non_blocking=True)
+            images2 = images2.cuda(args.gpu, non_blocking=True)
 
         # compute output
-        output, target = model(im_q=images[0], im_k=images[1])
+        output, target = model(im_q=images1, im_k=images2)
         loss = criterion(output, target)
+
+        losses.update(loss.item(), images[0].size(0))
+        
+        current_lr = optimizer.param_groups[0]['lr']
+        if args.rank == 0:
+            # summary_writer.add_scalar("loss", loss.item(), epoch * iters_per_epoch + i)
+            wandb.log({"train_loss": loss.item(), "lr": current_lr}, step=epoch)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        losses.update(loss.item(), images[0].size(0))
-        top1.update(acc1[0], images[0].size(0))
-        top5.update(acc5[0], images[0].size(0))
+        # acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        losses.update(loss.item(), images1.size(0))
+        # top1.update(acc1[0], images1.size(0))
+        # top5.update(acc5[0], images1.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()

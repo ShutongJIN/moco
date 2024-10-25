@@ -1,0 +1,15 @@
+
+Loaded 10 images out of 10 requested.
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/process.py", line 318, in _bootstrap
+    util._exit_function()
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/util.py", line 357, in _exit_function
+    p.join()
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt

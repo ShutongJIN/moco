@@ -1,0 +1,94 @@
+*************************************************************
+*************************************************************
+You have loaded a module for Anaconda Free edition.
+These modules are DEPRECATED for license reasons (see below).
+*************************************************************
+*************************************************************
+
+The Anaconda Python distribution license terms were updated on
+March 31, 2024 in a way that we interpret as restricting also
+general noncommercial use of Anaconda "Free edition" in organizations
+with more than 200 employees.
+
+To help users avoid possible licensing issues, we have deprecated
+the Anaconda/<version> modules and now direct users to the
+compatible community-provided software in our modules named:
+
+  Mambaforge/<version>
+
+These modules behave very similar to the Anaconda modules. Upon
+loading the module, you can access the 'conda' command, allowing
+you to interact with your existing Anaconda environments like before.
+**You do not need to rebuild your existing Anaconda environments**.
+
+One practical difference is that the Mambaforge tools are configured
+to only use the "conda-forge" channel for packages by default. However,
+this is rarely a problem for typical use.
+
+For questions related to our Anaconda and Mambaforge modules,
+please email: berzelius-support@nsc.liu.se
+
+---------------------------------------------------------------------------------------------------
+NOTE: We strongly advice against placing 'conda activate' (with or without
+arguments)
+      in your shell initialization files, (e.g. '.bashrc' or '.bash_profile')
+since this
+      severly alters the environment for running software in ways that cause
+unpredictable
+      issues that can be difficult to diagnose.
+---------------------------------------------------------------------------------------------------
+
+wandb: Currently logged in as: shutong-jin1999. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.18.5 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.13.4
+wandb: Run data is saved locally in /home/x_shuji/moco/wandb/run-20241023_082618-4w8zszre
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run v2_resnet50_003_1M
+wandb: ⭐️ View project at https://wandb.ai/shutong-jin1999/moco_pretraining
+wandb: 🚀 View run at https://wandb.ai/shutong-jin1999/moco_pretraining/runs/4w8zszre
+terminate called without an active exception
+terminate called without an active exception
+terminate called without an active exception
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x149cf42d9ca0>
+Traceback (most recent call last):
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 1479, in __del__
+    self._shutdown_workers()
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/utils/data/dataloader.py", line 1443, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/utils/data/_utils/signal_handling.py", line 66, in handler
+    _error_if_any_worker_fails()
+RuntimeError: DataLoader worker (pid 3121838) is killed by signal: Aborted. 
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+wandb: - 0.001 MB of 0.001 MB uploaded (0.000 MB deduped)wandb: \ 0.009 MB of 0.009 MB uploaded (0.000 MB deduped)wandb: Synced v2_resnet50_003_1M: https://wandb.ai/shutong-jin1999/moco_pretraining/runs/4w8zszre
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20241023_082618-4w8zszre/logs
+Traceback (most recent call last):
+  File "/home/x_shuji/moco/main_moco.py", line 594, in <module>
+    main()
+  File "/home/x_shuji/moco/main_moco.py", line 221, in main
+    mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/multiprocessing/spawn.py", line 239, in spawn
+    return start_processes(fn, args, nprocs, join, daemon, start_method='spawn')
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/multiprocessing/spawn.py", line 197, in start_processes
+    while not context.join():
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/multiprocessing/spawn.py", line 160, in join
+    raise ProcessRaisedException(msg, error_index, failed_process.pid)
+torch.multiprocessing.spawn.ProcessRaisedException: 
+
+-- Process 0 terminated with the following error:
+Traceback (most recent call last):
+  File "/home/x_shuji/.conda/envs/data4robotics/lib/python3.9/site-packages/torch/multiprocessing/spawn.py", line 69, in _wrap
+    fn(i, *args)
+  File "/home/x_shuji/moco/main_moco.py", line 402, in main_worker
+    train(train_loader, model, criterion, optimizer, epoch, args)
+  File "/home/x_shuji/moco/main_moco.py", line 494, in train
+    wandb.log({"train_loss": loss.item(), "lr": lr}, step=epoch)
+NameError: name 'lr' is not defined
+
